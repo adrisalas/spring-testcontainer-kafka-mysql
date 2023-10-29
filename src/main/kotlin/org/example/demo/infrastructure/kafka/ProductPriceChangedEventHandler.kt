@@ -1,8 +1,7 @@
 package org.example.demo.infrastructure.kafka
 
 import org.example.demo.domain.ProductPriceChanged
-import org.example.demo.domain.ports.ProductEventPublisher
-import org.example.demo.domain.ports.ProductPriceChangedSubscriber
+import org.example.demo.domain.ProductService
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
@@ -10,29 +9,21 @@ import org.springframework.transaction.annotation.Transactional
 
 @Component
 @Transactional
-class ProductPriceChangedEventHandler : ProductEventPublisher {
+class ProductPriceChangedEventHandler(private val productService: ProductService) {
 
     companion object {
         private val log = LoggerFactory.getLogger(this::class.java)
     }
 
-    private val subscribers = ArrayList<ProductPriceChangedSubscriber>()
-
-    override fun subscribe(eventAction: ProductPriceChangedSubscriber) {
-        subscribers.add(eventAction)
-    }
-
     @KafkaListener(topics = ["product-price-changes"], groupId = "demo")
-    fun handle(event: ProductPriceChangedDto) {
-        val productPriceChanged = ProductPriceChanged(event.productCode, event.price)
+    fun handleChangeOfProductPrice(dto: ProductPriceChangedDto) {
+        val productPriceChanged = ProductPriceChanged(dto.productCode, dto.price)
 
         log.info(
             "Received a ProductPriceChangedEvent with productCode:{}: ",
             productPriceChanged.productCode
         )
 
-        subscribers.forEach {
-            it.invoke(productPriceChanged)
-        }
+        productService.handleEvent(productPriceChanged)
     }
 }

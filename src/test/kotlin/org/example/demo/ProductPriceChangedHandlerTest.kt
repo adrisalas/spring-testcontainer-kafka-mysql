@@ -59,7 +59,7 @@ class ProductPriceChangedHandlerTest {
     }
 
     @Test
-    fun shouldHandleProductPriceChangedEvent() {
+    fun `should handle ProductPriceChanged event`() {
         val productPriceChange = ProductPriceChangedDto("P100", BigDecimal("14.50"))
         kafkaTemplate.send("product-price-changes", productPriceChange.productCode, productPriceChange)
 
